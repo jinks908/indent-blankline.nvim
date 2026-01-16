@@ -14,6 +14,9 @@ local M = {}
 
 M.initialized = false
 
+M.scope_start_line = {}
+M.scope_end_line = {}
+
 ---@type table<number, { scope: TSNode?, left_offset: number, top_offset: number, tick: number }>
 local global_buffer_state = {}
 
@@ -248,6 +251,11 @@ M.refresh = function(bufnr)
         scope_row_start, scope_col_start, scope_row_end, scope_col_end = scope:range()
         scope_row_start, scope_col_start, scope_row_end = scope_row_start + 1, scope_col_start + 1, scope_row_end + 1
     end
+
+    -- store scope lines for navigation
+    M.scope_start_line = { scope_row_start, scope_col_start }
+    M.scope_end_line = { scope_row_end, scope_col_end }
+
     local exact_scope_col_start = scope_col_start
 
     ---@type ibl.indent.whitespace[]
