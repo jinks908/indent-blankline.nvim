@@ -14,6 +14,7 @@ local M = {}
 
 M.initialized = false
 
+-- initialize scope lines for navigation
 M.scope_start_line = {}
 M.scope_end_line = {}
 
@@ -252,7 +253,7 @@ M.refresh = function(bufnr)
         scope_row_start, scope_col_start, scope_row_end = scope_row_start + 1, scope_col_start + 1, scope_row_end + 1
     end
 
-    -- store scope lines for navigation
+    -- get scope lines for navigation
     M.scope_start_line = { scope_row_start, scope_col_start }
     M.scope_end_line = { scope_row_end, scope_col_end }
 
@@ -498,5 +499,33 @@ M.refresh = function(bufnr)
         ::continue::
     end
 end
+
+-- jump to start (true) or end (false) of current scope
+function M.jump_to_scope(start)
+    local jump_pos
+    if start then
+        jump_pos = M.scope_start_line
+        -- validate position before jumping
+        if jump_pos[1] < 0 or jump_pos[2] < 1 then
+            -- if invalid, fallback to matching brace
+            vim.cmd("normal! %")
+            return
+        end
+        vim.api.nvim_win_set_cursor(0, { jump_pos[1], jump_pos[2] - 1 })
+    else
+        jump_pos = M.scope_end_line
+        -- validate position before jumping
+        if jump_pos[1] > vim.api.nvim_buf_line_count(0) or jump_pos[2] < 0 then
+            -- if invalid, fallback to matching brace
+            vim.cmd("normal! %")
+            return
+        end
+        vim.api.nvim_win_set_cursor(0, { jump_pos[1], jump_pos[2] })
+    end
+end
+
+-- user commands for scope navigation
+vim.api.nvim_create_user_command('JumpToScopeStart', function() M.jump_to_scope(true) end, {})
+vim.api.nvim_create_user_command('JumpToScopeEnd', function() M.jump_to_scope(false) end, {})
 
 return M
